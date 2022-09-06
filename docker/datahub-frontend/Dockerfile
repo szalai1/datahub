@@ -43,6 +43,7 @@ RUN cd datahub-src \
 
 FROM base as prod-install
 COPY --from=prod-build /datahub-frontend /datahub-frontend/
+COPY ./docker/datahub-frontend/start.sh /
 COPY ./docker/monitoring/client-prometheus-config.yaml /datahub-frontend/
 RUN wget https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.4.1/opentelemetry-javaagent-all.jar -O opentelemetry-javaagent-all.jar \
     && wget https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.16.1/jmx_prometheus_javaagent-0.16.1.jar -O jmx_prometheus_javaagent.jar
@@ -62,14 +63,4 @@ RUN echo $SERVER_PORT
 EXPOSE $SERVER_PORT
 
 HEALTHCHECK --start-period=2m --retries=4 CMD curl --fail http://localhost:$SERVER_PORT/admin || exit 1
-
-ENV JAVA_OPTS=" \
-   -Xms512m \
-   -Xmx1024m \
-   -Dhttp.port=$SERVER_PORT \
-   -Dconfig.file=datahub-frontend/conf/application.conf \
-   -Djava.security.auth.login.config=datahub-frontend/conf/jaas.conf \
-   -Dlogback.configurationFile=datahub-frontend/conf/logback.xml \
-   -Dlogback.debug=false \
-   -Dpidfile.path=/dev/null"
-CMD ["datahub-frontend/bin/datahub-frontend"]
+CMD ./start.sh
